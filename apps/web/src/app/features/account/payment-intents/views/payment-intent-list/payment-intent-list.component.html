@@ -1,5 +1,13 @@
 <div class="header-wrapper">
   <h1>Transactions</h1>
+  <button
+    type="button"
+    class="action-button action-button-dainty"
+    (click)="actions.OpenExport(GetExportDataset())"
+  >
+    <img class="button-icon" src="assets/icons/download.svg" alt="" />
+    <span>Export CSV</span>
+  </button>
 </div>
 
 <div class="tab-bar">

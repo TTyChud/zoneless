@@ -7,3 +7,14 @@
   (confirmed)="actions.ConfirmEditMetadata()"
   (cancelled)="actions.metadataDialogOpen.set(false)"
 ></app-metadata-edit-modal>
+
+<app-confirm-dialog
+  [isOpen]="actions.exportDialogOpen()"
+  title="Export transactions"
+  description="Export all available transactions to a CSV file."
+  confirmLabel="Export"
+  [loading]="actions.exporting()"
+  [error]="actions.exportError()"
+  (confirmed)="actions.ConfirmExport()"
+  (cancelled)="actions.CloseExport()"
+></app-confirm-dialog>

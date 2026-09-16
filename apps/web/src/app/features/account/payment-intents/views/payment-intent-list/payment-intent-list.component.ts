@@ -16,6 +16,12 @@ import { GetPaymentIntentListStatus } from '@zoneless/shared-types';
 import { MetaService } from '../../../../../core';
 import { PaymentIntentActionsHostComponent } from '../../components/payment-intent-actions-host/payment-intent-actions-host.component';
 import { TransactionListComponent } from '../../../components';
+import { PaymentIntentActionsService } from '../../services/payment-intent-actions.service';
+import {
+  BalanceTransactionExportDataset,
+  ExportDataset,
+  PaymentIntentExportDataset,
+} from '../../util/transaction-export';
 
 type TransactionsTab = 'payments' | 'payouts' | 'topups' | 'transfers' | 'all';
 type PaymentsStatusTab =
@@ -38,6 +44,7 @@ type PaymentsStatusTab =
 })
 export class PaymentIntentListComponent implements OnInit {
   readonly route = inject(ActivatedRoute);
+  readonly actions = inject(PaymentIntentActionsService);
   private readonly metaService = inject(MetaService);
 
   transactionsTab: WritableSignal<TransactionsTab> = signal('payments');
@@ -164,6 +171,21 @@ export class PaymentIntentListComponent implements OnInit {
 
   SetTransactionsTab(tab: TransactionsTab): void {
     this.transactionsTab.set(tab);
+  }
+
+  GetExportDataset(): ExportDataset {
+    switch (this.transactionsTab()) {
+      case 'payments':
+        return PaymentIntentExportDataset(this.paymentIntentsQueryParams());
+      case 'payouts':
+        return BalanceTransactionExportDataset(this.payoutQueryParams);
+      case 'topups':
+        return BalanceTransactionExportDataset(this.topupQueryParams);
+      case 'transfers':
+        return BalanceTransactionExportDataset(this.transferQueryParams);
+      case 'all':
+        return BalanceTransactionExportDataset();
+    }
   }
 
   SetPaymentsStatusTab(tab: PaymentsStatusTab): void {
