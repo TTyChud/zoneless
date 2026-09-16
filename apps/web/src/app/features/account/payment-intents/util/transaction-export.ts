@@ -21,6 +21,7 @@ export interface ExportDataset {
   endpoint: string;
   queryParams: Record<string, string>;
   filenameStem: string;
+  tabLabel: string;
   headers: string[];
   row: (item: unknown) => CsvValue[];
 }
@@ -103,15 +104,24 @@ export function DownloadCsv(filename: string, csv: string): void {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
+const BALANCE_TRANSACTION_TABS: Record<
+  string,
+  { stem: string; label: string }
+> = {
+  payout: { stem: 'payouts', label: 'payouts' },
+  topup: { stem: 'topups', label: 'top-ups' },
+  transfer: { stem: 'transfers', label: 'transfers' },
+};
+
 export function BalanceTransactionExportDataset(
   queryParams: Record<string, string> = {}
 ): ExportDataset {
-  // Name the file after the tab the export came from: payouts, topups, transfers.
-  const type = queryParams['type'];
+  const tab = BALANCE_TRANSACTION_TABS[queryParams['type'] ?? ''];
   return {
     endpoint: 'balance_transactions',
     queryParams,
-    filenameStem: type ? `${type}s` : 'balance_transactions',
+    filenameStem: tab?.stem ?? 'balance_transactions',
+    tabLabel: tab?.label ?? 'transactions',
     headers: [
       'balance_transaction_id',
       'created_utc',
@@ -137,6 +147,7 @@ export function PaymentIntentExportDataset(
     endpoint: 'payment_intents',
     queryParams,
     filenameStem: 'payment_intents',
+    tabLabel: 'payments',
     headers: [
       'id',
       'created_utc',

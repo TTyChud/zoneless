@@ -31,11 +31,13 @@ export class PaymentIntentActionsService {
   exportDialogOpen: WritableSignal<boolean> = signal(false);
   exporting: WritableSignal<boolean> = signal(false);
   exportError: WritableSignal<string> = signal('');
+  exportTabLabel: WritableSignal<string> = signal('');
   private readonly exportDataset: WritableSignal<ExportDataset | null> =
     signal(null);
 
   OpenExport(dataset: ExportDataset): void {
     this.exportDataset.set(dataset);
+    this.exportTabLabel.set(dataset.tabLabel);
     this.exportError.set('');
     this.exportDialogOpen.set(true);
   }
@@ -43,6 +45,7 @@ export class PaymentIntentActionsService {
   CloseExport(): void {
     this.exportDialogOpen.set(false);
     this.exportError.set('');
+    this.exportTabLabel.set('');
     this.exportDataset.set(null);
   }
 
@@ -60,7 +63,7 @@ export class PaymentIntentActionsService {
       );
 
       if (items.length === 0) {
-        this.exportError.set('No transactions to export.');
+        this.exportError.set(`No ${dataset.tabLabel} to export.`);
         return;
       }
 

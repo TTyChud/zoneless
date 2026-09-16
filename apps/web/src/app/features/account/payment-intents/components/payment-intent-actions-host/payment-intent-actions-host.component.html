@@ -10,8 +10,8 @@
 
 <app-confirm-dialog
   [isOpen]="actions.exportDialogOpen()"
-  title="Export transactions"
-  description="Export all available transactions to a CSV file."
+  [title]="'Export ' + actions.exportTabLabel()"
+  [description]="'Export these ' + actions.exportTabLabel() + ' to a CSV file.'"
   confirmLabel="Export"
   [loading]="actions.exporting()"
   [error]="actions.exportError()"

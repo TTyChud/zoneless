@@ -33,6 +33,7 @@ const SmallDataset: ExportDataset = {
   endpoint: 'test',
   queryParams: {},
   filenameStem: 'test',
+  tabLabel: 'tests',
   headers: ['id', 'amount'],
   row: (item) => {
     const row = item as { id: string; amount: number };
@@ -112,13 +113,15 @@ describe('BalanceTransactionExportDataset', () => {
     );
   });
 
-  it('names the file after the tab dataset', () => {
-    expect(
-      BalanceTransactionExportDataset({ type: 'topup' }).filenameStem
-    ).toBe('topups');
-    expect(BalanceTransactionExportDataset().filenameStem).toBe(
-      'balance_transactions'
-    );
+  it('names the file and the dialog after the tab dataset', () => {
+    expect(BalanceTransactionExportDataset({ type: 'topup' })).toMatchObject({
+      filenameStem: 'topups',
+      tabLabel: 'top-ups',
+    });
+    expect(BalanceTransactionExportDataset()).toMatchObject({
+      filenameStem: 'balance_transactions',
+      tabLabel: 'transactions',
+    });
   });
 });
 
