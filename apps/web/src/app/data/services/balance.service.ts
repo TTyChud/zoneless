@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, WritableSignal } from '@angular/core';
 import { ApiService, AuthService } from '../../core';
 import { Balance, BalanceDetails } from '@zoneless/shared-types';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root',
@@ -8,6 +9,7 @@ import { Balance, BalanceDetails } from '@zoneless/shared-types';
 export class BalanceService {
   private readonly api = inject(ApiService);
   private readonly authService = inject(AuthService);
+  private readonly configService = inject(ConfigService);
 
   balance: WritableSignal<Balance | null> = signal(null);
   balanceDetails: WritableSignal<BalanceDetails | null> = signal(null);
@@ -69,6 +71,8 @@ export class BalanceService {
 
   async SyncBalanceOnPageOpen(): Promise<void> {
     if (!this.authService.isPlatform()) return;
+
+    if (this.configService.IsSimulatedSettlement()) return;
 
     try {
       await this.SyncBalance();
