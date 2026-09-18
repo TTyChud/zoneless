@@ -2,21 +2,28 @@
 
 import { Injector } from '@angular/core';
 import { BalanceService } from './balance.service';
+import { ConfigService } from './config.service';
 import { ApiService, AuthService } from '../../core';
 
 describe('BalanceService.SyncBalanceOnPageOpen', () => {
   let service: BalanceService;
   const apiCall = jest.fn();
   const isPlatform = jest.fn().mockReturnValue(false);
+  const isSimulatedSettlement = jest.fn().mockReturnValue(false);
 
   beforeEach(() => {
     apiCall.mockReset();
     isPlatform.mockReset().mockReturnValue(false);
+    isSimulatedSettlement.mockReset().mockReturnValue(false);
     const injector = Injector.create({
       providers: [
         BalanceService,
         { provide: ApiService, useValue: { Call: apiCall } },
         { provide: AuthService, useValue: { isPlatform } },
+        {
+          provide: ConfigService,
+          useValue: { IsSimulatedSettlement: isSimulatedSettlement },
+        },
       ],
     });
     service = injector.get(BalanceService);
@@ -41,6 +48,15 @@ describe('BalanceService.SyncBalanceOnPageOpen', () => {
   });
 
   it('does not sync for connected (non-platform) accounts', async () => {
+    await service.SyncBalanceOnPageOpen();
+
+    expect(apiCall).not.toHaveBeenCalled();
+  });
+
+  it('does not sync when settlement is simulated', async () => {
+    isPlatform.mockReturnValue(true);
+    isSimulatedSettlement.mockReturnValue(true);
+
     await service.SyncBalanceOnPageOpen();
 
     expect(apiCall).not.toHaveBeenCalled();
