@@ -71,6 +71,7 @@ router.get(
  * - created: Filter by creation timestamp (object with gt, gte, lt, lte, or single timestamp)
  * - ending_before: Cursor for backward pagination
  * - limit: Number of results (1-100, default: 10)
+ * - related_object: Only return events for this object (matches `data.object.id`)
  * - starting_after: Cursor for forward pagination
  * - type: Specific event name or group using * as wildcard
  * - types: Array of up to 20 specific event names (mutually exclusive with type)
@@ -90,6 +91,8 @@ router.get(
     const startingAfter = req.query.starting_after as string | undefined;
     const endingBefore = req.query.ending_before as string | undefined;
     const created = ParseCreatedFilter(req.query as Record<string, unknown>);
+    const relatedObject =
+      (req.query.related_object as string | undefined) || undefined;
     const type = req.query.type as string | undefined;
     const types = req.query.types
       ? Array.isArray(req.query.types)
@@ -102,6 +105,7 @@ router.get(
       limit,
       startingAfter,
       endingBefore,
+      relatedObject,
       type,
       types,
     });
@@ -114,6 +118,7 @@ router.get(
         startingAfter,
         endingBefore,
         created,
+        relatedObject,
         type,
         types,
       });

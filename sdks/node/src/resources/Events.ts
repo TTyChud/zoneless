@@ -25,6 +25,7 @@ export class Events extends BaseResource {
       limit: params.limit,
       starting_after: params.starting_after,
       ending_before: params.ending_before,
+      related_object: params.related_object,
       type: params.type,
     };
 

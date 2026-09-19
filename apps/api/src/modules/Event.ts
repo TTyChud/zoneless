@@ -202,49 +202,20 @@ export class EventModule {
     options: ListOptions & {
       type?: string;
       types?: string[];
+      relatedObject?: string;
     }
   ): Promise<ListResult<Event>> {
-    const { type, types, ...listOptions } = options;
+    const { type, types, relatedObject, ...listOptions } = options;
 
-    // Validate that type and types are not both provided
-    if (type && types) {
-      throw new Error('You may pass either type or types, but not both.');
-    }
-
-    // Validate types array length
-    if (types && types.length > 20) {
-      throw new Error('types array cannot contain more than 20 items.');
-    }
-
-    // Use filters for exact type match (no wildcard)
-    const filters: Record<string, unknown> = { ...listOptions.filters };
-    if (type && !type.includes('*')) {
-      filters.type = type;
-    }
+    this.ValidateTypeOptions(type, types);
 
     // Use ListHelper for base pagination and created filtering
-    let result = await this.listHelper.List({
+    const result = await this.listHelper.List({
       ...listOptions,
-      filters,
+      filters: this.BuildListFilters(type, relatedObject, listOptions.filters),
     });
 
-    // Post-filter for wildcard or multiple types (can't be done via database query)
-    if (type && type.includes('*')) {
-      // Wildcard matching: convert 'account.*' to prefix match
-      const prefix = type.replace('*', '');
-      result = {
-        ...result,
-        data: result.data.filter((event) => event.type.startsWith(prefix)),
-      };
-    } else if (types && types.length > 0) {
-      // Filter by array of specific types
-      result = {
-        ...result,
-        data: result.data.filter((event) => types.includes(event.type)),
-      };
-    }
-
-    return result;
+    return this.ApplyTypePostFilters(result, type, types);
   }
 
   /**
@@ -260,49 +231,84 @@ export class EventModule {
       platformAccount: string;
       type?: string;
       types?: string[];
+      relatedObject?: string;
     }
   ): Promise<ListResult<Event>> {
-    const { platformAccount, type, types, ...listOptions } = options;
+    const { platformAccount, type, types, relatedObject, ...listOptions } =
+      options;
 
-    // Validate that type and types are not both provided
+    this.ValidateTypeOptions(type, types);
+
+    // Use the platform list helper which queries by platform_account
+    const result = await this.platformListHelper.List({
+      ...listOptions,
+      account: platformAccount, // This will query platform_account field
+      filters: this.BuildListFilters(type, relatedObject, listOptions.filters),
+    });
+
+    return this.ApplyTypePostFilters(result, type, types);
+  }
+
+  /**
+   * type and types are mutually exclusive, and types accepts at most 20 entries.
+   */
+  private ValidateTypeOptions(type?: string, types?: string[]): void {
     if (type && types) {
       throw new Error('You may pass either type or types, but not both.');
     }
 
-    // Validate types array length
     if (types && types.length > 20) {
       throw new Error('types array cannot contain more than 20 items.');
     }
+  }
 
-    // Use filters for exact type match (no wildcard)
-    const filters: Record<string, unknown> = { ...listOptions.filters };
-    if (type && !type.includes('*')) {
-      filters.type = type;
-    }
-
-    // Use the platform list helper which queries by platform_account
-    let result = await this.platformListHelper.List({
-      ...listOptions,
-      account: platformAccount, // This will query platform_account field
-      filters,
-    });
-
-    // Post-filter for wildcard or multiple types (can't be done via database query)
+  /**
+   * Post-filter for wildcard or multiple types (can't be done via database query).
+   */
+  private ApplyTypePostFilters(
+    result: ListResult<Event>,
+    type?: string,
+    types?: string[]
+  ): ListResult<Event> {
     if (type && type.includes('*')) {
       // Wildcard matching: convert 'account.*' to prefix match
       const prefix = type.replace('*', '');
-      result = {
+      return {
         ...result,
         data: result.data.filter((event) => event.type.startsWith(prefix)),
       };
-    } else if (types && types.length > 0) {
-      // Filter by array of specific types
-      result = {
+    }
+
+    if (types && types.length > 0) {
+      return {
         ...result,
         data: result.data.filter((event) => types.includes(event.type)),
       };
     }
 
     return result;
+  }
+
+  /**
+   * Filters that can be matched exactly in the database query.
+   * Wildcard and multi-type filters are post-filtered instead.
+   */
+  private BuildListFilters(
+    type: string | undefined,
+    relatedObject: string | undefined,
+    base?: ListOptions['filters']
+  ): Record<string, unknown> {
+    const filters: Record<string, unknown> = { ...base };
+
+    if (type && !type.includes('*')) {
+      filters.type = type;
+    }
+
+    // The object an event relates to lives on data.object
+    if (relatedObject) {
+      filters['data.object.id'] = relatedObject;
+    }
+
+    return filters;
   }
 }

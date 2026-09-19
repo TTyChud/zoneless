@@ -1863,6 +1863,7 @@ export type ListEventsInput = {
         lte?: number | undefined;
       }
     | undefined;
+  related_object?: string | undefined;
   type?: string | undefined;
   types?: string[] | undefined;
 };

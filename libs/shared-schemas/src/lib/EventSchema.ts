@@ -27,6 +27,8 @@ export const ListEventsSchema = z
         lte: z.number().int(),
       })
       .partial(),
+    /** Only return events whose object has this ID (e.g. a payment intent or product ID) */
+    related_object: z.string(),
     /** Specific event name or group using * as wildcard (e.g., 'account.*') */
     type: z.string(),
     /** Array of up to 20 specific event names (mutually exclusive with type) */

@@ -375,6 +375,12 @@ const LIST_EVENTS_PARAMETERS: Attribute[] = [
       'A limit on the number of objects to be returned. Limit can range between 1 and 100, and the default is 10.',
   },
   {
+    name: 'related_object',
+    type: 'string',
+    description:
+      'Only return the events for this object, for example <code>related_object=pi_z_7shF2nVcbQrLm4Xd</code> to list the events of one payment intent. Events match when their <code>data.object.id</code> is this ID. <strong>Zoneless extension:</strong> Stripe does not document this parameter for v1 events.',
+  },
+  {
     name: 'starting_after',
     type: 'string',
     description:
