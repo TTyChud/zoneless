@@ -1,5 +1,6 @@
 import { EventModule, ExtractChangedFields } from '../modules/Event';
 import { Database } from '../modules/Database';
+import { ListHelper } from '../utils/ListHelper';
 import { Event } from '@zoneless/shared-types';
 import {
   CreateMockDatabase,
@@ -102,6 +103,142 @@ describe('EventModule', () => {
         event.id,
         expect.objectContaining({ type: 'account.created' })
       );
+    });
+  });
+
+  describe('ListEvents', () => {
+    const listResult = {
+      object: 'list' as const,
+      data: [],
+      has_more: false,
+      url: '/v1/events',
+    };
+
+    it('should pass related_object as a data.object.id filter to ListHelper', async () => {
+      const listSpy = jest
+        .spyOn(ListHelper.prototype, 'List')
+        .mockResolvedValue(listResult);
+
+      await module.ListEvents({ relatedObject: 'prod_z_1' });
+
+      expect(listSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filters: { 'data.object.id': 'prod_z_1' },
+        })
+      );
+
+      listSpy.mockRestore();
+    });
+
+    it('should list events without filters when related_object is not provided', async () => {
+      const listSpy = jest
+        .spyOn(ListHelper.prototype, 'List')
+        .mockResolvedValue(listResult);
+
+      await module.ListEvents({});
+
+      expect(listSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ filters: {} })
+      );
+
+      listSpy.mockRestore();
+    });
+
+    it('should keep the related_object filter when combined with an exact type', async () => {
+      const listSpy = jest
+        .spyOn(ListHelper.prototype, 'List')
+        .mockResolvedValue(listResult);
+
+      await module.ListEvents({
+        relatedObject: 'prod_z_1',
+        type: 'product.updated',
+      });
+
+      expect(listSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filters: {
+            type: 'product.updated',
+            'data.object.id': 'prod_z_1',
+          },
+        })
+      );
+
+      listSpy.mockRestore();
+    });
+
+    it('should drop wildcard types from the database filter and post-filter them', async () => {
+      const events = [
+        { type: 'product.created' },
+        { type: 'product.updated' },
+        { type: 'price.created' },
+      ] as Event[];
+      const listSpy = jest
+        .spyOn(ListHelper.prototype, 'List')
+        .mockResolvedValue({ ...listResult, data: events });
+
+      const result = await module.ListEvents({
+        relatedObject: 'prod_z_1',
+        type: 'product.*',
+      });
+
+      // The wildcard must not reach the database query as an equality filter
+      expect(listSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          filters: { 'data.object.id': 'prod_z_1' },
+        })
+      );
+      expect(result.data.map((event) => event.type)).toEqual([
+        'product.created',
+        'product.updated',
+      ]);
+
+      listSpy.mockRestore();
+    });
+  });
+
+  describe('ListEventsByPlatform', () => {
+    const listResult = {
+      object: 'list' as const,
+      data: [],
+      has_more: false,
+      url: '/v1/events',
+    };
+
+    it('should query by platform_account and scope to the related object', async () => {
+      const listSpy = jest
+        .spyOn(ListHelper.prototype, 'List')
+        .mockResolvedValue(listResult);
+
+      await module.ListEventsByPlatform({
+        platformAccount: 'acct_z_platform',
+        relatedObject: 'pi_z_1',
+      });
+
+      expect(listSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          account: 'acct_z_platform',
+          filters: { 'data.object.id': 'pi_z_1' },
+        })
+      );
+
+      listSpy.mockRestore();
+    });
+
+    it('should list all platform events without filters when related_object is not provided', async () => {
+      const listSpy = jest
+        .spyOn(ListHelper.prototype, 'List')
+        .mockResolvedValue(listResult);
+
+      await module.ListEventsByPlatform({ platformAccount: 'acct_z_platform' });
+
+      expect(listSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          account: 'acct_z_platform',
+          filters: {},
+        })
+      );
+
+      listSpy.mockRestore();
     });
   });
 
