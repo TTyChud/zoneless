@@ -707,6 +707,30 @@ export type CreateExternalWalletInput = {
   metadata?: Record<string, string> | undefined;
 };
 
+export type CreateIdentityVerificationSessionInput = {
+  type: 'address' | 'document' | 'id_number' | 'verification_flow';
+  related_account: string;
+  related_person?: string | undefined;
+  metadata?: Record<string, string> | undefined;
+  options?:
+    | {
+        document?:
+          | {
+              require_live_capture?: boolean | undefined;
+              require_matching_selfie?: boolean | undefined;
+              allowed_types?:
+                | ('driving_license' | 'id_card' | 'passport')[]
+                | undefined;
+            }
+          | undefined;
+      }
+    | undefined;
+  provided_details?:
+    | { email?: string | null | undefined; phone?: string | null | undefined }
+    | undefined;
+  return_url?: string | undefined;
+};
+
 export type CreateInvoiceInput = {
   account_tax_ids?: string[] | undefined;
   application_fee_amount?: number | undefined;
@@ -1873,6 +1897,28 @@ export type ListExternalWalletsInput = {
   ending_before?: string | undefined;
 };
 
+export type ListIdentityVerificationSessionsInput = {
+  limit?: number | undefined;
+  starting_after?: string | undefined;
+  ending_before?: string | undefined;
+  related_account?: string | undefined;
+  status?:
+    | 'verified'
+    | 'processing'
+    | 'requires_action'
+    | 'canceled'
+    | 'requires_input'
+    | undefined;
+  created?:
+    | {
+        gt?: number | undefined;
+        gte?: number | undefined;
+        lt?: number | undefined;
+        lte?: number | undefined;
+      }
+    | undefined;
+};
+
 export type ListInvoiceItemsInput = {
   created?:
     | {
@@ -2555,6 +2601,26 @@ export type UpdateExternalWalletInput = {
   account_holder_type?: 'individual' | 'company' | null | undefined;
   default_for_currency?: boolean | null | undefined;
   metadata?: Record<string, string> | undefined;
+};
+
+export type UpdateIdentityVerificationSessionInput = {
+  metadata?: Record<string, string> | undefined;
+  provided_details?:
+    | { email?: string | null | undefined; phone?: string | null | undefined }
+    | undefined;
+  options?:
+    | {
+        document?:
+          | {
+              require_live_capture?: boolean | undefined;
+              require_matching_selfie?: boolean | undefined;
+              allowed_types?:
+                | ('driving_license' | 'id_card' | 'passport')[]
+                | undefined;
+            }
+          | undefined;
+      }
+    | undefined;
 };
 
 export type UpdateInvoiceInput = {

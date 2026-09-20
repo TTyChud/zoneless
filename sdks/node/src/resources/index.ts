@@ -10,6 +10,8 @@ export { Customers } from './Customers';
 export { Events } from './Events';
 export { ExternalAccounts } from './ExternalAccounts';
 export type { ExternalWalletDeletedResponse } from './ExternalAccounts';
+export { Identity } from './Identity';
+export { IdentityVerificationSessions } from './IdentityVerificationSessions';
 export { InvoiceItems } from './InvoiceItems';
 export { Invoices } from './Invoices';
 export { LoginLinks } from './LoginLinks';
