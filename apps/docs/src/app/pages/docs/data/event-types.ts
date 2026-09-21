@@ -270,6 +270,53 @@ export const EVENT_TYPE_DEFINITIONS: EventTypeDefinition[] = [
     description: 'Occurs whenever an external wallet is deleted.',
   },
 
+  // Identity verification session events
+  {
+    name: 'identity.verification_session.created',
+    resource: 'identity.verification_session',
+    objectType: 'VerificationSession',
+    objectHref: '#identity-verification-sessions-object',
+    description: 'Occurs whenever a verification session is created.',
+  },
+  {
+    name: 'identity.verification_session.processing',
+    resource: 'identity.verification_session',
+    objectType: 'VerificationSession',
+    objectHref: '#identity-verification-sessions-object',
+    description:
+      'Occurs whenever a verification session transitions to <code>processing</code>, once the seller submits their documents or moves through the flow.',
+  },
+  {
+    name: 'identity.verification_session.requires_input',
+    resource: 'identity.verification_session',
+    objectType: 'VerificationSession',
+    objectHref: '#identity-verification-sessions-object',
+    description:
+      'Occurs whenever a verification session transitions to <code>requires_input</code>, when the seller needs to provide more information or try again.',
+  },
+  {
+    name: 'identity.verification_session.verified',
+    resource: 'identity.verification_session',
+    objectType: 'VerificationSession',
+    objectHref: '#identity-verification-sessions-object',
+    description:
+      'Occurs whenever a verification session transitions to <code>verified</code>, once the check passes.',
+  },
+  {
+    name: 'identity.verification_session.canceled',
+    resource: 'identity.verification_session',
+    objectType: 'VerificationSession',
+    objectHref: '#identity-verification-sessions-object',
+    description: 'Occurs whenever a verification session is canceled.',
+  },
+  {
+    name: 'identity.verification_session.redacted',
+    resource: 'identity.verification_session',
+    objectType: 'VerificationSession',
+    objectHref: '#identity-verification-sessions-object',
+    description: 'Occurs whenever a verification session is redacted.',
+  },
+
   // Invoice events
   {
     name: 'invoice.created',
