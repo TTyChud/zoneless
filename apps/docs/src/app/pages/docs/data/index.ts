@@ -40,6 +40,7 @@ export * from './event-types';
 export * from './webhook-endpoints';
 export * from './migrate-from-stripe';
 export * from './identity-verification';
+export * from './identity-verification-sessions';
 export * from './connect';
 export * from './products';
 export * from './prices';

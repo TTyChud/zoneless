@@ -21,6 +21,7 @@ import { INVOICE_ITEMS_SUBSECTION } from './invoice-items';
 import { INVOICES_SUBSECTION } from './invoices';
 import { BILLING_SUBSECTION } from './billing';
 import { EVENTS_SUBSECTION } from './events';
+import { IDENTITY_VERIFICATION_SESSIONS_SUBSECTION } from './identity-verification-sessions';
 import { WEBHOOK_ENDPOINTS_SUBSECTION } from './webhook-endpoints';
 
 export const CORE_RESOURCES_SECTION: DocSection = {
@@ -80,6 +81,12 @@ export const CONNECT_SECTION: DocSection = {
   ],
 };
 
+export const IDENTITY_SECTION: DocSection = {
+  id: 'identity',
+  title: 'Identity',
+  children: [IDENTITY_VERIFICATION_SESSIONS_SUBSECTION],
+};
+
 export const WEBHOOKS_SECTION: DocSection = {
   id: 'webhooks-section',
   title: 'Webhooks',
@@ -93,5 +100,6 @@ export const API_SECTIONS: DocSection[] = [
   PAYMENT_LINKS_SECTION,
   BILLING_SECTION,
   CONNECT_SECTION,
+  IDENTITY_SECTION,
   WEBHOOKS_SECTION,
 ];

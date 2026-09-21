@@ -25,6 +25,7 @@ import {
   PRIMARY_GUIDE_SECTIONS,
   IDEMPOTENT_REQUESTS_PAGE,
   IDENTITY_VERIFICATION_PAGE,
+  IDENTITY_VERIFICATION_SESSIONS_PAGES,
   INVOICE_ITEMS_PAGES,
   INVOICES_PAGES,
   LOCAL_DEVELOPMENT_PAGE,
@@ -87,6 +88,7 @@ export const docPageGroups: Record<string, DocPage[]> = {
   billing: BILLING_PAGES,
   events: EVENTS_PAGES,
   'webhook-endpoints': WEBHOOK_ENDPOINTS_PAGES,
+  'identity-verification-sessions': IDENTITY_VERIFICATION_SESSIONS_PAGES,
 };
 
 export const docSinglePages: DocPage[] = [
