@@ -922,6 +922,7 @@ export const IDENTITY_VERIFICATION_SESSIONS_CANCEL_PAGE: DocPage = {
           variant: 'warning',
           title: 'Not allowed after completion: ',
           text: 'Sessions that are already <code>canceled</code> or <code>verified</code> cannot be canceled.',
+          html: true,
         },
         { type: 'heading', level: 2, text: 'Parameters' },
         { type: 'paragraph', text: 'No parameters.' },
