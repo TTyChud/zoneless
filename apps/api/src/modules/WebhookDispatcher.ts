@@ -16,8 +16,10 @@ interface WebhookResponse {
   error?: string;
 }
 
+export const WEBHOOK_REQUEST_TIMEOUT_SECONDS = 30;
+
 export class WebhookDispatcher {
-  private readonly defaultTimeout = 30000; // 30 seconds
+  private readonly defaultTimeout = WEBHOOK_REQUEST_TIMEOUT_SECONDS * 1000;
 
   /**
    * Sends an event to a webhook URL.
