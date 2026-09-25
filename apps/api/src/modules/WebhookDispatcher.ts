@@ -1,3 +1,10 @@
+/**
+ * @fileOverview Webhook dispatcher for sending events to webhook endpoints
+ *
+ *
+ * @module WebhookDispatcher
+ */
+
 import {
   Event as EventType,
   WebhookDeliveryAttemptResult,
@@ -18,6 +25,14 @@ export const WEBHOOK_REQUEST_TIMEOUT_SECONDS = 30;
 export class WebhookDispatcher {
   private readonly defaultTimeout = WEBHOOK_REQUEST_TIMEOUT_SECONDS * 1000;
 
+  /**
+   * Sends an event to a webhook URL.
+   *
+   * @param event - The event to send
+   * @param url - The webhook URL
+   * @param secret - Optional signing secret
+   * @returns Promise resolving to the attempt result, status code, error and duration
+   */
   async Send(
     event: EventType,
     url: string,

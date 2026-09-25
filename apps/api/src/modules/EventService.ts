@@ -1,3 +1,21 @@
+/**
+ * @fileOverview Event service for creating events and dispatching webhooks
+ *
+ * This service combines event creation with webhook dispatching.
+ *
+ * Webhooks are dispatched to all enabled webhook endpoints that subscribe
+ * to the event type for the relevant platform.
+ *
+ * Each delivery is persisted before the first attempt so failed attempts can
+ * be retried by the webhook delivery worker.
+ *
+ * In multi-tenant mode, events are routed to the platform that owns the
+ * resource being acted upon.
+ *
+ *
+ * @module EventService
+ */
+
 import {
   Event,
   EventDataObject,
@@ -37,6 +55,30 @@ export class EventService {
     this.webhookDeliveryWorker = new WebhookDeliveryWorker(db);
   }
 
+  /**
+   * Creates an event and dispatches webhooks to all subscribed endpoints.
+   *
+   * This method:
+   * 1. Determines which platform should receive the event based on the account
+   * 2. Creates the event in the database
+   * 3. Finds all webhook endpoints that subscribe to this event type
+   * 4. Persists one delivery per endpoint
+   * 5. Sends the first attempt to each endpoint
+   * 6. Returns the created event
+   *
+   * The first attempt is done asynchronously (fire and forget) to not block
+   * the response. Failed attempts are retried by the webhook delivery worker.
+   * Failures are logged but don't affect the event creation.
+   *
+   * Request context (idempotency key, request ID) is automatically pulled
+   * from AsyncLocalStorage - no need to pass explicitly.
+   *
+   * @param type - Event type (e.g., 'account.created', 'account.updated')
+   * @param account - The account ID this event relates to
+   * @param dataObject - The data object to include in the event
+   * @param options - Additional event options
+   * @returns The created event
+   */
   async Emit(
     type: EventType,
     account: string,
@@ -91,6 +133,15 @@ export class EventService {
     return event;
   }
 
+  /**
+   * Determines which platform should receive an event based on the account.
+   * For account events, uses the account's platform_account field.
+   * For other resources, looks up the owning account's platform.
+   *
+   * @param account - The account ID from the event
+   * @param dataObject - The event data object
+   * @returns The platform account ID that should receive the event
+   */
   private async ResolvePlatformForEvent(
     account: string,
     dataObject: EventDataObject
@@ -108,6 +159,13 @@ export class EventService {
     return account;
   }
 
+  /**
+   * Persists a webhook delivery for the event to each subscribed endpoint.
+   *
+   * @param event - The event to dispatch
+   * @param endpoints - The endpoints subscribed to the event type
+   * @returns The created deliveries, empty when there is nothing to deliver
+   */
   private async PersistDeliveries(
     event: Event,
     endpoints: WebhookEndpointRecord[]
@@ -142,6 +200,12 @@ export class EventService {
     }
   }
 
+  /**
+   * Sends the first delivery attempt for each persisted delivery.
+   *
+   * @param event - The event being dispatched
+   * @param deliveries - The deliveries to attempt
+   */
   private async DeliverFirstAttempts(
     event: Event,
     deliveries: WebhookDelivery[]
@@ -166,6 +230,17 @@ export class EventService {
     });
   }
 
+  /**
+   * Creates an event object without saving to database or dispatching webhooks.
+   * Useful for testing or previewing events.
+   *
+   * @param type - Event type
+   * @param account - The account ID
+   * @param platformAccountId - The platform account ID
+   * @param dataObject - The data object
+   * @param options - Additional event options
+   * @returns The event object (not persisted)
+   */
   CreateEventObject(
     type: EventType,
     account: string,
