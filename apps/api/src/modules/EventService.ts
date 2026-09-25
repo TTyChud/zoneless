@@ -6,9 +6,6 @@
  * Webhooks are dispatched to all enabled webhook endpoints that subscribe
  * to the event type for the relevant platform.
  *
- * Each delivery is persisted before the first attempt so failed attempts can
- * be retried by the webhook delivery worker.
- *
  * In multi-tenant mode, events are routed to the platform that owns the
  * resource being acted upon.
  *
@@ -62,13 +59,11 @@ export class EventService {
    * 1. Determines which platform should receive the event based on the account
    * 2. Creates the event in the database
    * 3. Finds all webhook endpoints that subscribe to this event type
-   * 4. Persists one delivery per endpoint
-   * 5. Sends the first attempt to each endpoint
-   * 6. Returns the created event
+   * 4. Sends the webhook to each endpoint
+   * 5. Returns the created event
    *
-   * The first attempt is done asynchronously (fire and forget) to not block
-   * the response. Failed attempts are retried by the webhook delivery worker.
-   * Failures are logged but don't affect the event creation.
+   * Webhook delivery is done asynchronously (fire and forget) to not block
+   * the response. Failures are logged but don't affect the event creation.
    *
    * Request context (idempotency key, request ID) is automatically pulled
    * from AsyncLocalStorage - no need to pass explicitly.
@@ -85,13 +80,16 @@ export class EventService {
     dataObject: EventDataObject,
     options: EventOptions = {}
   ): Promise<Event> {
+    // Determine which platform should receive this event
     const platformAccountId = await this.ResolvePlatformForEvent(
       account,
       dataObject
     );
 
+    // Get request context (idempotency key, request ID) from AsyncLocalStorage
     const reqContext = GetRequestContext();
 
+    // Get webhook endpoints count before creating event to set pending_webhooks
     const endpoints =
       await this.webhookEndpointModule.GetWebhookEndpointsForEvent(
         platformAccountId,
@@ -99,6 +97,7 @@ export class EventService {
       );
     const pendingWebhooksCount = endpoints.length;
 
+    // Create the event with request context merged in
     const event = await this.eventModule.CreateEvent(
       type,
       account,
@@ -121,14 +120,13 @@ export class EventService {
 
     const deliveries = await this.PersistDeliveries(event, endpoints);
 
-    if (deliveries.length > 0) {
-      this.DeliverFirstAttempts(event, deliveries).catch((error) => {
-        Logger.error('Failed to dispatch webhooks', error, {
-          eventId: event.id,
-          eventType: type,
-        });
+    // Dispatch webhooks asynchronously (don't await - fire and forget)
+    this.DeliverFirstAttempts(event, deliveries).catch((error) => {
+      Logger.error('Failed to dispatch webhooks', error, {
+        eventId: event.id,
+        eventType: type,
       });
-    }
+    });
 
     return event;
   }
@@ -146,16 +144,19 @@ export class EventService {
     account: string,
     dataObject: EventDataObject
   ): Promise<string> {
+    // For account events, use the platform_account field directly
     if ('object' in dataObject && dataObject.object === 'account') {
       const acct = dataObject as { id: string; platform_account: string };
       return acct.platform_account;
     }
 
+    // For other resources, look up the account's platform
     const resourceAccount = await this.accountModule.GetAccount(account);
     if (resourceAccount) {
       return GetPlatformAccountId(resourceAccount);
     }
 
+    // Fallback to the account itself (might be a platform)
     return account;
   }
 
@@ -210,12 +211,14 @@ export class EventService {
     event: Event,
     deliveries: WebhookDelivery[]
   ): Promise<void> {
+    // Dispatch to all endpoints in parallel
     const results = await Promise.allSettled(
       deliveries.map((delivery) =>
         this.webhookDeliveryWorker.ProcessDelivery(delivery.id)
       )
     );
 
+    // Log summary
     const successful = results.filter(
       (result) => result.status === 'fulfilled' && result.value === 'succeeded'
     ).length;

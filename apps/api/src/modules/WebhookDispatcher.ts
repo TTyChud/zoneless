@@ -31,7 +31,7 @@ export class WebhookDispatcher {
    * @param event - The event to send
    * @param url - The webhook URL
    * @param secret - Optional signing secret
-   * @returns Promise resolving to the attempt result, status code, error and duration
+   * @returns Promise resolving to the response status
    */
   async Send(
     event: EventType,
