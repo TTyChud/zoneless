@@ -1,4 +1,4 @@
-/** Status of a webhook delivery. Only `pending` and `retrying` can be attempted. */
+/** Status of a webhook delivery. Only `pending` and `retrying` can be claimed. */
 export type WebhookDeliveryStatus =
   | 'pending'
   | 'retrying'
@@ -27,32 +27,22 @@ export interface WebhookDeliveryAttempt {
   url: string;
 }
 
-/**
- * Delivery of one Event to one webhook endpoint, persisted for every
- * subscribed endpoint before the first attempt. @internal
- */
+/** Delivery of one Event to one webhook endpoint. @internal */
 export interface WebhookDelivery {
   id: string;
-  /** String representing the object's type. Objects of the same type share the same value. */
   object: 'webhook_delivery';
   event_id: string;
   webhook_endpoint_id: string;
   /** Retries stop once the delivery is `succeeded` or `failed` */
   status: WebhookDeliveryStatus;
-  /** Time the next attempt is due, or null when the delivery is no longer retried */
+  /** Time the next attempt is due, or null once retries have stopped */
   next_attempt_at: number | null;
-  /** Time the first successful attempt was made, or null */
   delivered_at: number | null;
-  /** Time the current claim expires, or null when no worker holds it */
   claim_until: number | null;
-  /** Token of the worker holding the claim. A worker whose token no longer matches has lost it and cannot settle the delivery */
+  /** Set while a worker holds the claim; a stale token cannot settle the delivery */
   claim_token: string | null;
   attempts: WebhookDeliveryAttempt[];
-
-  /**
-   * The platform account that owns the Event this delivery belongs to.
-   * @zoneless_extension
-   */
+  /** The platform account that owns the Event. @zoneless_extension */
   platform_account: string;
 }
 
